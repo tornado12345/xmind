@@ -206,8 +206,7 @@ public class CloneHandler {
         List<ISheet> sheets = targetWorkbook.getSheets();
         ArrayList<ITopic> targetAllTopics = new ArrayList<ITopic>();
         for (ISheet sheet : sheets) {
-            targetAllTopics.add(sheet.getRootTopic());
-            targetAllTopics.addAll(sheet.getRootTopic().getAllChildren());
+            getAllChildrenTopic(targetAllTopics, sheet.getRootTopic());
         }
 
         IWorkbookExtensionManager sourceExtensionManager = sourceWorkbook
@@ -224,6 +223,14 @@ public class CloneHandler {
         }
 
         fixInternalHyperlinkFor(targetAllTopics);
+    }
+
+    private List<ITopic> getAllChildrenTopic(List<ITopic> topics, ITopic root) {
+        topics.add(root);
+        for (ITopic topic : root.getAllChildren()) {
+            getAllChildrenTopic(topics, topic);
+        }
+        return topics;
     }
 
     /**
@@ -428,12 +435,18 @@ public class CloneHandler {
         /// copy marker resource content
         IMarkerResource sourceResource = sourceMarker.getResource();
         if (sourceResource != null) {
-            InputStream input = sourceResource.openInputStream();
+            InputStream input = null;
             try {
+                input = sourceResource.openInputStream();
                 targetResourcePath = targetMarkerSheet
                         .allocateMarkerResource(input, sourceResourcePath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
             } finally {
-                input.close();
+                if (input != null) {
+                    input.close();
+                }
             }
         }
 
@@ -482,11 +495,39 @@ public class CloneHandler {
         copySheetContents(sourceSheet, targetSheet);
 
         ArrayList<ITopic> targetAllTopics = new ArrayList<ITopic>();
-        targetAllTopics.add(targetSheet.getRootTopic());
-        targetAllTopics.addAll(targetSheet.getRootTopic().getAllChildren());
+        getAllChildrenTopic(targetAllTopics, targetSheet.getRootTopic());
 
         fixInternalHyperlinkFor(targetAllTopics);
+        replaceProcessorOldIds(targetAllTopics);
         return targetSheet;
+    }
+
+    private void replaceProcessorOldIds(ArrayList<ITopic> targetAllTopics) {
+        for (ITopic topic : targetAllTopics) {
+            replaceProcessorOldIds(topic);
+        }
+    }
+
+    private void replaceProcessorOldIds(ITopic topic) {
+        ITopicExtension ext = topic.getExtension("org.xmind.ui.taskInfo"); //$NON-NLS-1$
+        if (ext != null) {
+            ITopicExtensionElement content = ext.getContent();
+            List<ITopicExtensionElement> parentElements = content
+                    .getChildren("predecessors"); //$NON-NLS-1$
+
+            for (ITopicExtensionElement parentElement : parentElements) {
+                List<ITopicExtensionElement> elements = parentElement
+                        .getChildren("predecessor"); //$NON-NLS-1$
+                for (ITopicExtensionElement element : elements) {
+                    String taskId = element.getAttribute("task-id"); //$NON-NLS-1$
+                    String newTaskId = mapper
+                            .getString(ICloneData.WORKBOOK_COMPONENTS, taskId);
+                    if (newTaskId != null) {
+                        element.setAttribute("task-id", newTaskId); //$NON-NLS-1$
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -647,8 +688,7 @@ public class CloneHandler {
         }
 
         List<ITopic> targetAllTopics = new ArrayList<ITopic>();
-        targetAllTopics.add(targetTopic);
-        targetAllTopics.addAll(targetTopic.getAllChildren());
+        getAllChildrenTopic(targetAllTopics, targetTopic);
 
         fixInternalHyperlinkFor(targetAllTopics);
 

@@ -19,6 +19,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.Hyperlink;
+import org.xmind.core.net.util.LinkUtils;
 import org.xmind.core.usagedata.IUsageDataSampler;
 import org.xmind.core.usagedata.IUsageDataUploader;
 import org.xmind.ui.preference.PreferenceFieldEditorPageSection;
@@ -62,7 +63,9 @@ public class StartupPreferencePageSection extends
     @Override
     protected void createFieldEditors() {
         addStartupGroup(container);
-        addSendUsageDataGroup(container);
+        if (isShowUploadDataCheck()) {
+            addSendUsageDataGroup(container);
+        }
         this.initialize();
     }
 
@@ -74,8 +77,16 @@ public class StartupPreferencePageSection extends
 
         startupActionButton = new Button(container, SWT.CHECK);
         startupActionButton.setText(WorkbenchMessages.RestoreLastSession_label);
-        addField(new BooleanFieldEditor(CathyPlugin.CHECK_UPDATES_ON_STARTUP,
-                WorkbenchMessages.CheckUpdates_label, container));
+
+        if (isShowUploadDataCheck()) {
+            addField(
+                    new BooleanFieldEditor(CathyPlugin.CHECK_UPDATES_ON_STARTUP,
+                            WorkbenchMessages.CheckUpdates_label, container));
+        }
+    }
+
+    private boolean isShowUploadDataCheck() {
+        return !Boolean.getBoolean(CathyPlugin.KEY_NOT_SHOW_UPLOAD_DATA_CHECK);
     }
 
     private void addSendUsageDataGroup(Composite parent) {
@@ -105,7 +116,8 @@ public class StartupPreferencePageSection extends
                 (Color) resources.get(ColorUtils.toDescriptor("#006CF9"))); //$NON-NLS-1$
         privacyHyperlink.addHyperlinkListener(new HyperlinkAdapter() {
             public void linkActivated(HyperlinkEvent e) {
-                Program.launch("http://www.xmind.net/privacy/usage/"); //$NON-NLS-1$
+                Program.launch(LinkUtils.getLinkByLanguage(true, false,
+                        "/privacy/usage/")); //$NON-NLS-1$
             }
         });
 

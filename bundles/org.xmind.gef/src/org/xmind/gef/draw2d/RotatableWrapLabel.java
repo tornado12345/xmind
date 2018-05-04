@@ -11,9 +11,7 @@
 package org.xmind.gef.draw2d;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -101,7 +99,6 @@ public class RotatableWrapLabel extends Figure implements ITextFigure,
     private PrecisionDimension nonRotatedPrefSize = null;
     private PrecisionInsets rotatedInsets = null;
     private int cachedWidthHint = -1;
-    private static Map<String, Integer> textToLabelWidth = new HashMap<String, Integer>();
 
     private PrecisionRotator rotator = new PrecisionRotator();
 
@@ -112,7 +109,6 @@ public class RotatableWrapLabel extends Figure implements ITextFigure,
     }
 
     public RotatableWrapLabel(String text) {
-        setCachedPrefWidth(text);
         setText(text);
     }
 
@@ -121,7 +117,6 @@ public class RotatableWrapLabel extends Figure implements ITextFigure,
     }
 
     public RotatableWrapLabel(String text, int renderStyle) {
-        setCachedPrefWidth(text);
         setText(text);
         this.renderStyle = renderStyle;
     }
@@ -479,7 +474,6 @@ public class RotatableWrapLabel extends Figure implements ITextFigure,
         String result = theText;
         int textLength = result.length();
         if (wHint > 0 && textLength > 0) {
-            textToLabelWidth.put(text, (int) wHint);
             int textWidth = getLooseTextSize(result, f).width;
             if (textWidth > wHint) {
                 int tructionPosition = (int) ((double) result.length()
@@ -944,7 +938,36 @@ public class RotatableWrapLabel extends Figure implements ITextFigure,
     }
 
     protected boolean isNormalRenderStyle() {
-        return renderStyle == NORMAL;
+        /// some fonts don't show correctly when use graphics.drawText(), so render it by path.
+        boolean shownWrong = false;
+        String fontName = null;
+        if (getFont() != null) {
+            fontName = (getFont().getFontData())[0].getName();
+        }
+
+        String[] wrongFontNames = { "Cambria Math", "Gabriola", "Javanese Text", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                "Lucida Sans Unicode", "Microsoft Himalaya", "MV Boli", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                "Myanmar Text", "Segoe MDL2 Assets" }; //$NON-NLS-1$ //$NON-NLS-2$
+        String[] wrongFontPrefixs = { "Sitka" }; //$NON-NLS-1$
+
+        if (fontName != null) {
+            for (String name : wrongFontNames) {
+                if (fontName.equals(name)) {
+                    shownWrong = true;
+                    break;
+                }
+            }
+            if (!shownWrong) {
+                for (String prefix : wrongFontPrefixs) {
+                    if (fontName.startsWith(prefix)) {
+                        shownWrong = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return renderStyle == NORMAL && !shownWrong;
     }
 
     /**
@@ -963,12 +986,6 @@ public class RotatableWrapLabel extends Figure implements ITextFigure,
 
     public String toString() {
         return "RotatableWrapLabl (" + getText() + ")"; //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    private void setCachedPrefWidth(String text) {
-        Integer cached = textToLabelWidth.get(text);
-        if (cached != null)
-            this.prefWidth = cached;
     }
 
 }

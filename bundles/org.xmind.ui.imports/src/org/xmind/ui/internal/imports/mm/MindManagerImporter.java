@@ -60,6 +60,7 @@ import org.xmind.core.ITopicExtension;
 import org.xmind.core.ITopicExtensionElement;
 import org.xmind.core.ITopicRange;
 import org.xmind.core.IWorkbook;
+import org.xmind.core.internal.UserDataConstants;
 import org.xmind.core.internal.dom.NumberUtils;
 import org.xmind.core.internal.dom.StyleSheetImpl;
 import org.xmind.core.io.DirectoryStorage;
@@ -360,7 +361,7 @@ public class MindManagerImporter extends MindMapImporter
 
     public void build() throws InvocationTargetException, InterruptedException {
         MindMapUIPlugin.getDefault().getUsageDataCollector()
-                .increase("ImportFromMindManagerCount"); //$NON-NLS-1$
+                .increase(UserDataConstants.IMPORT_FROM_MIND_MANAGER_COUNT);
         getMonitor().beginTask(null, 100);
         try {
             getMonitor()
@@ -477,6 +478,7 @@ public class MindManagerImporter extends MindMapImporter
         checkInterrupted();
 
         targetSheet = getTargetWorkbook().createSheet();
+        targetSheet.setTitleText(getSuggestedSheetTitle());
 
         Element oneTopicEle = child(docEle, "OneTopic"); //$NON-NLS-1$
         if (oneTopicEle != null) {

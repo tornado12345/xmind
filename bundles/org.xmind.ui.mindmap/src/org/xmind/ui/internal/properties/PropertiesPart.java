@@ -15,6 +15,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.resource.LocalResourceManager;
 import org.eclipse.jface.resource.ResourceManager;
+import org.eclipse.jface.util.Util;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -30,13 +31,16 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IViewSite;
@@ -55,6 +59,7 @@ import org.eclipse.ui.part.IContributedContentsView;
 import org.eclipse.ui.part.IPageSite;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.services.IServiceLocator;
+import org.xmind.core.internal.UserDataConstants;
 import org.xmind.core.style.IStyled;
 import org.xmind.gef.ui.editor.IGraphicalEditor;
 import org.xmind.gef.ui.editor.IGraphicalEditorPage;
@@ -64,6 +69,7 @@ import org.xmind.ui.commands.CommandMessages;
 import org.xmind.ui.commands.ModifyStyleCommand;
 import org.xmind.ui.forms.WidgetFactory;
 import org.xmind.ui.internal.MindMapMessages;
+import org.xmind.ui.internal.MindMapUIPlugin;
 import org.xmind.ui.internal.e4models.IModelConstants;
 import org.xmind.ui.internal.e4models.ViewModelFolderRenderer;
 import org.xmind.ui.internal.e4models.ViewModelPart;
@@ -149,24 +155,31 @@ public class PropertiesPart extends ViewModelPart
         }
 
         if (sourceEditor != null) {
-            sourceEditor.getSite().getSelectionProvider()
-                    .addSelectionChangedListener(this);
+            if (this.sourceEditor != null) {
+                final ISelectionProvider selectionProvider = sourceEditor
+                        .getSite().getSelectionProvider();
+                if (selectionProvider != null) {
+                    selectionProvider.addSelectionChangedListener(this);
 
-            final ISelection selection = sourceEditor.getSite()
-                    .getSelectionProvider().getSelection();
-            if (selection != null && !selection.isEmpty()) {
-                Display.getCurrent().asyncExec(new Runnable() {
-                    public void run() {
-                        selectionChanged(new SelectionChangedEvent(
-                                sourceEditor.getSite().getSelectionProvider(),
-                                selection));
+                    final ISelection selection = selectionProvider
+                            .getSelection();
+                    if (selection != null && !selection.isEmpty()) {
+                        Display.getCurrent().asyncExec(new Runnable() {
+                            public void run() {
+                                selectionChanged(new SelectionChangedEvent(
+                                        selectionProvider, selection));
+                            }
+                        });
                     }
-                });
+                }
             }
         }
     }
 
     protected void createContent(Composite parent) {
+        MindMapUIPlugin.getDefault().getUsageDataCollector()
+                .increase(UserDataConstants.SHOW_FORMAT_PART_COUNT);
+
         CTabFolder ctf = new CTabFolder(parent, SWT.BORDER);
         ctf.setRenderer(new ViewModelFolderRenderer(ctf));
         ctf.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -226,6 +239,7 @@ public class PropertiesPart extends ViewModelPart
         this.widgetFactory = new WidgetFactory(contentComposite.getDisplay());
 
         form = widgetFactory.createScrolledForm(contentComposite);
+        addHorizontalScrollSupport(form);
         form.setLayoutData(new GridData(GridData.FILL_BOTH));
         form.setMinWidth(DEFAULT_SECTION_WIDTH);
         form.addDisposeListener(new DisposeListener() {
@@ -253,6 +267,24 @@ public class PropertiesPart extends ViewModelPart
         this.composite = composite;
 
         return composite;
+    }
+
+    // add horizontal scroll support for windows
+    private void addHorizontalScrollSupport(final ScrolledForm form) {
+        if (Util.isWindows()) {
+            form.addListener(SWT.MouseHorizontalWheel, new Listener() {
+
+                public void handleEvent(Event event) {
+                    if (!form.isDisposed()) {
+                        int offset = event.count;
+                        offset = -(int) (Math.sqrt(Math.abs(offset)) * offset);
+
+                        Point origin = form.getOrigin();
+                        form.setOrigin(origin.x + offset, origin.y);
+                    }
+                }
+            });
+        }
     }
 
     private Composite createDefaultPage(Composite parent) {
@@ -313,9 +345,13 @@ public class PropertiesPart extends ViewModelPart
         if (this.sourceEditor == editor)
             return;
 
-        if (this.sourceEditor != null)
-            this.sourceEditor.getSite().getSelectionProvider()
-                    .removeSelectionChangedListener(this);
+        if (this.sourceEditor != null) {
+            ISelectionProvider selectionProvider = sourceEditor.getSite()
+                    .getSelectionProvider();
+            if (selectionProvider != null) {
+                selectionProvider.removeSelectionChangedListener(this);
+            }
+        }
 
         this.sourceEditor = editor;
 
@@ -723,8 +759,11 @@ public class PropertiesPart extends ViewModelPart
 
     public void dispose() {
         if (sourceEditor != null) {
-            sourceEditor.getSite().getSelectionProvider()
-                    .removeSelectionChangedListener(this);
+            ISelectionProvider selectionProvider = sourceEditor.getSite()
+                    .getSelectionProvider();
+            if (selectionProvider != null) {
+                selectionProvider.removeSelectionChangedListener(this);
+            }
         }
 
         for (SectionRecord rec : sections) {

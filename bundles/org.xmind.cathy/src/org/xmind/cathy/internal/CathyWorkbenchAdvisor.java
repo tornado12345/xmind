@@ -203,15 +203,22 @@ public class CathyWorkbenchAdvisor extends WorkbenchAdvisor
 
     private void saveEditorsState(IMemento memento,
             ArrayList<IEditorReference> editorRefs) {
-        IWorkbenchPage activePage = PlatformUI.getWorkbench()
-                .getActiveWorkbenchWindow().getActivePage();
-        IEditorPart activeEditor = activePage.getActiveEditor();
+        IEditorPart activeEditor = null;
+
+        IWorkbenchWindow window = PlatformUI.getWorkbench()
+                .getActiveWorkbenchWindow();
+        if (window != null && window.getActivePage() != null) {
+            activeEditor = window.getActivePage().getActiveEditor();
+        }
 
         IMemento childrenMemento = memento
                 .createChild(IWorkbenchConstants.TAG_EDITORS);
         if (!editorRefs.isEmpty())
             for (IEditorReference ref : editorRefs) {
                 IEditorPart editor = ref.getEditor(false);
+                if (editor == null) {
+                    continue;
+                }
                 IMemento editorMemento = childrenMemento
                         .createChild(IWorkbenchConstants.TAG_EDITOR);
                 editorMemento.putBoolean(IWorkbenchConstants.TAG_ACTIVE_PART,

@@ -21,6 +21,7 @@ import org.eclipse.ui.ISourceProvider;
 import org.xmind.core.ITopic;
 import org.xmind.core.ITopicExtension;
 import org.xmind.core.ITopicExtensionElement;
+import org.xmind.core.internal.UserDataConstants;
 import org.xmind.gef.command.ModifyCommand;
 import org.xmind.ui.internal.MindMapUIPlugin;
 
@@ -97,8 +98,14 @@ public class ModifyTopicStructureCommand extends ModifyCommand {
                                 .setTextContent(rightNum);
                     }
                 }
-                MindMapUIPlugin.getDefault().getUsageDataCollector()
-                        .increase("StructureTypeCount:" + value); //$NON-NLS-1$
+                if (value != null) {
+                    String vs = value.toString();
+                    String ID = vs.replaceAll("\\.", "_");  //$NON-NLS-1$//$NON-NLS-2$
+                    MindMapUIPlugin.getDefault().getUsageDataCollector()
+                            .increase(String.format(
+                                    UserDataConstants.STRUCTURE_TYPE_COUNT,
+                                    ID));
+                }
                 topic.setStructureClass((String) value);
             }
         }
@@ -107,7 +114,7 @@ public class ModifyTopicStructureCommand extends ModifyCommand {
     @Override
     public void execute() {
         MindMapUIPlugin.getDefault().getUsageDataCollector()
-                .increase("ModifyStructureCount"); //$NON-NLS-1$
+                .increase(UserDataConstants.MODIFY_STRUCTURE_COUNT);
         super.execute();
     }
 

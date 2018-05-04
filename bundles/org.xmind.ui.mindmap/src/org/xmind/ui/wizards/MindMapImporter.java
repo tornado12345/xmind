@@ -20,12 +20,14 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.osgi.util.NLS;
 import org.xmind.core.Core;
 import org.xmind.core.ISheet;
 import org.xmind.core.ITopic;
 import org.xmind.core.IWorkbook;
 import org.xmind.core.style.IStyle;
 import org.xmind.core.style.IStyleSheet;
+import org.xmind.ui.internal.MindMapMessages;
 import org.xmind.ui.internal.editor.MME;
 import org.xmind.ui.mindmap.MindMapUI;
 import org.xmind.ui.util.MindMapUtils;
@@ -91,12 +93,16 @@ public abstract class MindMapImporter {
 
     private void initStyles() {
         for (ISheet sheet : getTargetWorkbook().getSheets()) {
-            sheet.setThemeId(createAppliedTheme(getTargetWorkbook(),
-                    MindMapUI.getResourceManager().getDefaultTheme()).getId());
+            IStyle appliedTheme = createAppliedTheme(getTargetWorkbook(),
+                    MindMapUI.getResourceManager().getDefaultTheme());
+            if (appliedTheme != null) {
+                sheet.setThemeId(appliedTheme.getId());
 
-            List<ITopic> topics = MindMapUtils.getAllTopics(sheet, true, true);
-            for (ITopic topic : topics) {
-                topic.setStyleId(null);
+                List<ITopic> topics = MindMapUtils.getAllTopics(sheet, true,
+                        true);
+                for (ITopic topic : topics) {
+                    topic.setStyleId(null);
+                }
             }
         }
     }
@@ -118,6 +124,11 @@ public abstract class MindMapImporter {
             }
         }
         targetSheets.add(sheet);
+    }
+
+    protected String getSuggestedSheetTitle() {
+        return NLS.bind(MindMapMessages.TitleText_Sheet,
+                newWorkbook ? 1 : getTargetWorkbook().getSheets().size() + 1);
     }
 
     public List<Map.Entry<Throwable, String>> getErrors() {

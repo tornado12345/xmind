@@ -15,7 +15,7 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.xmind.cathy.application"
-            name="XMind">
+            name="%xmind.product.name">
          <property
                name="windowImages"
                value="icons/xmind.16.png,icons/xmind.32.png,icons/xmind.48.png,icons/xmind.64.png,icons/xmind.128.png,icons/xmind.256.png"/>
@@ -111,7 +111,7 @@
       </page>
       <page
             class="org.eclipse.ui.ExtensionFactory:newKeysPreferencePage"
-            id="org.xmind.ui.prefPage.Keys"
+            id="org.eclipse.ui.preferencePages.Keys"
             name="%prefPage.keys.name">
       </page>
       <!--<page
@@ -1223,6 +1223,18 @@
                         property="org.xmind.ui.template.user">
                   </test>
                </iterate>
+            </with>
+         </activeWhen>
+      </handler>
+      <handler
+            class="org.xmind.cathy.internal.EmptyHandler"
+            commandId="org.eclipse.ui.window.splitEditor">
+         <activeWhen>
+            <with
+                  variable="activeWorkbenchWindow">
+               <instanceof
+                     value="org.eclipse.ui.IWorkbenchWindow">
+               </instanceof>
             </with>
          </activeWhen>
       </handler>
