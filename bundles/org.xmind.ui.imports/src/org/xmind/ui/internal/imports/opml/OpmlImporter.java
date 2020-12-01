@@ -7,7 +7,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -21,6 +20,7 @@ import org.xmind.core.IWorkbook;
 import org.xmind.core.internal.UserDataConstants;
 import org.xmind.core.util.DOMUtils;
 import org.xmind.ui.internal.MindMapUIPlugin;
+import org.xmind.ui.util.XMLUtils;
 import org.xmind.ui.wizards.MindMapImporter;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -37,14 +37,13 @@ public class OpmlImporter extends MindMapImporter
 
     @Override
     public void build() throws InvocationTargetException, InterruptedException {
-        MindMapUIPlugin.getDefault().getUsageDataCollector()
-                .increase(UserDataConstants.IMPORT_FROM_OPML_COUNT);
+        MindMapUIPlugin.getDefault().getUsageDataCollector().trackEvent(
+                UserDataConstants.CATEGORY_IMPORT,
+                UserDataConstants.IMPORT_FROM_OPML);
 
         InputStream in = null;
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory
-                    .newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
+            DocumentBuilder builder = XMLUtils.getDefaultDocumentBuilder();
             builder.setErrorHandler(this);
 
             in = new FileInputStream(getSourcePath());

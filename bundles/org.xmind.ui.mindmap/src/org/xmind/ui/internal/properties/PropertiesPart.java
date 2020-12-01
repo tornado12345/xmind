@@ -77,6 +77,7 @@ import org.xmind.ui.mindmap.ICategoryAnalyzation;
 import org.xmind.ui.mindmap.ICategoryManager;
 import org.xmind.ui.mindmap.MindMapUI;
 import org.xmind.ui.resources.ColorUtils;
+import org.xmind.ui.tabfolder.DelegatedSelectionProvider;
 
 public class PropertiesPart extends ViewModelPart
         implements ISelectionChangedListener, IPropertyPartContainer,
@@ -156,10 +157,10 @@ public class PropertiesPart extends ViewModelPart
 
         if (sourceEditor != null) {
             if (this.sourceEditor != null) {
-                final ISelectionProvider selectionProvider = sourceEditor
+                final DelegatedSelectionProvider selectionProvider = (DelegatedSelectionProvider) sourceEditor
                         .getSite().getSelectionProvider();
                 if (selectionProvider != null) {
-                    selectionProvider.addSelectionChangedListener(this);
+                    selectionProvider.addAsyncSelectionChangedListener(this);
 
                     final ISelection selection = selectionProvider
                             .getSelection();
@@ -178,7 +179,7 @@ public class PropertiesPart extends ViewModelPart
 
     protected void createContent(Composite parent) {
         MindMapUIPlugin.getDefault().getUsageDataCollector()
-                .increase(UserDataConstants.SHOW_FORMAT_PART_COUNT);
+                .trackView(UserDataConstants.VIEW_FORMAT);
 
         CTabFolder ctf = new CTabFolder(parent, SWT.BORDER);
         ctf.setRenderer(new ViewModelFolderRenderer(ctf));
@@ -346,10 +347,10 @@ public class PropertiesPart extends ViewModelPart
             return;
 
         if (this.sourceEditor != null) {
-            ISelectionProvider selectionProvider = sourceEditor.getSite()
-                    .getSelectionProvider();
+            DelegatedSelectionProvider selectionProvider = (DelegatedSelectionProvider) sourceEditor
+                    .getSite().getSelectionProvider();
             if (selectionProvider != null) {
-                selectionProvider.removeSelectionChangedListener(this);
+                selectionProvider.removeAsyncSelectionChangedListener(this);
             }
         }
 
@@ -682,9 +683,13 @@ public class PropertiesPart extends ViewModelPart
 
                 reflow();
             }
-            ti.setText(calcTitle(ss.toArray()) + " " + modeLabel); //$NON-NLS-1$
+            if (ti != null && !ti.isDisposed()) {
+                ti.setText(calcTitle(ss.toArray()) + " " + modeLabel); //$NON-NLS-1$
+            }
         } else {
-            ti.setText(modeLabel);
+            if (ti != null && !ti.isDisposed()) {
+                ti.setText(modeLabel);
+            }
         }
         if (getControl() != null && !getControl().isDisposed())
             getControl().setRedraw(true);
@@ -759,10 +764,10 @@ public class PropertiesPart extends ViewModelPart
 
     public void dispose() {
         if (sourceEditor != null) {
-            ISelectionProvider selectionProvider = sourceEditor.getSite()
-                    .getSelectionProvider();
+            DelegatedSelectionProvider selectionProvider = (DelegatedSelectionProvider) sourceEditor
+                    .getSite().getSelectionProvider();
             if (selectionProvider != null) {
-                selectionProvider.removeSelectionChangedListener(this);
+                selectionProvider.removeAsyncSelectionChangedListener(this);
             }
         }
 

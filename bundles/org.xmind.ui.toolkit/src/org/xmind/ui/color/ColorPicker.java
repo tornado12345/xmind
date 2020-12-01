@@ -6,7 +6,7 @@
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  * and the GNU Lesser General Public License (LGPL), 
  * which is available at http://www.gnu.org/licenses/lgpl.html
- * See http://www.xmind.net/license.html for details.
+ * See https://www.xmind.net/license.html for details.
  * 
  * Contributors:
  *     XMind Ltd. - initial API and implementation
@@ -138,7 +138,7 @@ public class ColorPicker extends ContributionItem
 
         private Point calcLocation(Rectangle aroundBounds, Point shellSize) {
             Point loc = new Point(aroundBounds.x, aroundBounds.y);
-            Rectangle area = getShell().getDisplay().getClientArea();
+            Rectangle area = getShell().getMonitor().getClientArea();
             if (aroundBounds.x + shellSize.x > area.x + area.width) {
                 loc.x = aroundBounds.x + aroundBounds.width - shellSize.x;
             }
@@ -454,14 +454,30 @@ public class ColorPicker extends ContributionItem
         if (widget instanceof ToolItem) {
             ToolItem item = (ToolItem) widget;
             ColorChooserPopupDialog dialog = getPopupDialog();
-            if (dialog != null)
+            if (dialog != null) {
                 dialog.open(getItemBoundsToDisplay(item));
+                popup.getShell().addDisposeListener(new DisposeListener() {
+
+                    @Override
+                    public void widgetDisposed(DisposeEvent e) {
+                        popup = null;
+                    }
+                });
+            }
         } else {
             Point curLoc = Display.getCurrent().getCursorLocation();
             if (curLoc != null) {
                 ColorChooserPopupDialog dialog = getPopupDialog();
-                if (dialog != null)
+                if (dialog != null) {
                     dialog.open(curLoc);
+                    popup.getShell().addDisposeListener(new DisposeListener() {
+
+                        @Override
+                        public void widgetDisposed(DisposeEvent e) {
+                            popup = null;
+                        }
+                    });
+                }
             }
         }
     }
@@ -471,13 +487,6 @@ public class ColorPicker extends ContributionItem
             Shell shell = getShell();
             if (shell != null) {
                 popup = new ColorChooserPopupDialog(shell);
-                popup.getShell().addDisposeListener(new DisposeListener() {
-
-                    @Override
-                    public void widgetDisposed(DisposeEvent e) {
-                        popup = null;
-                    }
-                });
             }
         }
         return popup;

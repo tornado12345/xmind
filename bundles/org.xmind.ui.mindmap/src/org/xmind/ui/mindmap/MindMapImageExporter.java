@@ -6,7 +6,7 @@
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  * and the GNU Lesser General Public License (LGPL),
  * which is available at http://www.gnu.org/licenses/lgpl.html
- * See http://www.xmind.net/license.html for details.
+ * See https://www.xmind.net/license.html for details.
  *
  * Contributors:
  *     XMind Ltd. - initial API and implementation
@@ -316,7 +316,7 @@ public class MindMapImageExporter {
     }
 
     private void recreateSourceProviderFromInput() {
-        if (parent != null) {
+        if (parent != null && parent.getParent() != null) {
             this.exportViewer = new MindMapExportViewer(parent, input,
                     properties);
         } else {

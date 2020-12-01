@@ -6,7 +6,7 @@
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  * and the GNU Lesser General Public License (LGPL),
  * which is available at http://www.gnu.org/licenses/lgpl.html
- * See http://www.xmind.net/license.html for details.
+ * See https://www.xmind.net/license.html for details.
  *
  * Contributors:
  *     XMind Ltd. - initial API and implementation
@@ -170,6 +170,7 @@ import org.xmind.ui.mindmap.MindMapViewerExportSourceProvider;
 import org.xmind.ui.prefs.PrefConstants;
 import org.xmind.ui.resources.ColorUtils;
 import org.xmind.ui.resources.FontUtils;
+import org.xmind.ui.tabfolder.DelegatedSelectionProvider;
 import org.xmind.ui.tabfolder.IPageMoveListener;
 import org.xmind.ui.tabfolder.PageMoveHelper;
 import org.xmind.ui.util.Logger;
@@ -428,7 +429,9 @@ public class MindMapEditor extends GraphicalEditor implements ISaveablePart2,
     }
 
     protected ISelectionProvider createSelectionProvider() {
-        return new MindMapEditorSelectionProvider();
+        DelegatedSelectionProvider selectionProvider = new MindMapEditorSelectionProvider();
+        selectionProvider.setDisplay(Display.getCurrent());
+        return selectionProvider;
     }
 
     protected ICommandStack createCommandStack() {
@@ -607,11 +610,9 @@ public class MindMapEditor extends GraphicalEditor implements ISaveablePart2,
         if (scheme == null || "".equalsIgnoreCase(scheme)) //$NON-NLS-1$
             return;
         if ("file".equalsIgnoreCase(scheme)) { //$NON-NLS-1$
-            MindMapUIPlugin.getDefault().getUsageDataCollector()
-                    .increase(UserDataConstants.OPEN_LOCAL_WORKBOOK_COUNT);
-        } else if ("seawind".equalsIgnoreCase(scheme)) { //$NON-NLS-1$
-            MindMapUIPlugin.getDefault().getUsageDataCollector()
-                    .increase(UserDataConstants.OPEN_CLOUD_WORKBOOK_COUNT);
+            MindMapUIPlugin.getDefault().getUsageDataCollector().trackEvent(
+                    UserDataConstants.CATEGORY_WORKBOOK,
+                    UserDataConstants.OPEN_LOCAL_WORKBOOK);
         }
     }
 
@@ -1462,7 +1463,7 @@ public class MindMapEditor extends GraphicalEditor implements ISaveablePart2,
             return;
         }
 
-        safeRun(monitor, true, new IRunnableWithProgress() {
+        safeRun(monitor, false, new IRunnableWithProgress() {
 
             @Override
             public void run(IProgressMonitor monitor)
@@ -1488,9 +1489,8 @@ public class MindMapEditor extends GraphicalEditor implements ISaveablePart2,
             return;
         URI uri = workbookRef.getURI();
 
-        //only local file or seawind file can record it history.
-        if (!uri.getScheme().equalsIgnoreCase("file") //$NON-NLS-1$
-                && !uri.getScheme().equalsIgnoreCase("seawind")) //$NON-NLS-1$
+        //only local file can record it history.
+        if (!uri.getScheme().equalsIgnoreCase("file")) //$NON-NLS-1$
             return;
 
         InputStream input = null;
@@ -1596,7 +1596,7 @@ public class MindMapEditor extends GraphicalEditor implements ISaveablePart2,
         } catch (Exception e) {
             StatusManager.getManager().handle(new Status(IStatus.ERROR,
                     MindMapUIPlugin.PLUGIN_ID, e.getMessage(), e),
-                    StatusManager.SHOW);
+                    StatusManager.LOG);
             return;
         }
 

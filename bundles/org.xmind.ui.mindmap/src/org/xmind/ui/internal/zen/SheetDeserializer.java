@@ -6,7 +6,7 @@
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  * and the GNU Lesser General Public License (LGPL), 
  * which is available at http://www.gnu.org/licenses/lgpl.html
- * See http://www.xmind.net/license.html for details.
+ * See https://www.xmind.net/license.html for details.
  * 
  * Contributors:
  *     XMind Ltd. - initial API and implementation
@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.Assert;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.xmind.core.IBoundary;
 import org.xmind.core.IComment;
@@ -67,6 +68,7 @@ import org.xmind.core.style.IStyleSheet;
 import org.xmind.core.style.IStyled;
 import org.xmind.core.util.HyperlinkUtils;
 import org.xmind.core.util.IStyleRefCounter;
+import org.xmind.ui.internal.MindMapUIPlugin;
 
 public class SheetDeserializer {
 
@@ -247,6 +249,11 @@ public class SheetDeserializer {
             topic.setPosition(null);
         }
         topic.setHyperlink(topicObject.optString(ZenConstants.KEY_HREF, null));
+
+        String zClass = topicObject.optString(ZenConstants.KEY_ZCLASS, null);
+        if (zClass != null) {
+            topic.setZClass(zClass);
+        }
 
         JSONArray labelArray = topicObject
                 .optJSONArray(ZenConstants.KEY_LABELS);
@@ -687,7 +694,25 @@ public class SheetDeserializer {
         Iterator<String> keyIt = propertiesObject.keys();
         while (keyIt.hasNext()) {
             String key = keyIt.next();
-            String value = propertiesObject.getString(key);
+
+            ///fix: value may be number.
+            String value = ""; //$NON-NLS-1$
+            try {
+                value = propertiesObject.getString(key);
+            } catch (JSONException e) {
+                Object value_0 = propertiesObject.get(key);
+                if (value_0 instanceof Integer || value_0 instanceof Double) {
+                    if ("fo:font-size".equals(key) //$NON-NLS-1$
+                            || "line-width".equals(key)) { //$NON-NLS-1$
+                        value = value_0 + "pt"; //$NON-NLS-1$
+                    } else {
+                        value = "" + value_0; //$NON-NLS-1$
+                    }
+                }
+
+                MindMapUIPlugin.log(e, null);
+            }
+
             style.setProperty(key, value);
             properties.setProperty(key, value);
         }

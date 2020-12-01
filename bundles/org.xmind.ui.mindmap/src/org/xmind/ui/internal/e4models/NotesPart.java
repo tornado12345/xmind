@@ -5,7 +5,7 @@
  * License (EPL), which is available at
  * http://www.eclipse.org/legal/epl-v10.html and the GNU Lesser General Public
  * License (LGPL), which is available at http://www.gnu.org/licenses/lgpl.html
- * See http://www.xmind.net/license.html for details. Contributors: XMind Ltd. -
+ * See https://www.xmind.net/license.html for details. Contributors: XMind Ltd. -
  * initial API and implementation
  *******************************************************************************/
 package org.xmind.ui.internal.e4models;
@@ -43,7 +43,6 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -125,6 +124,7 @@ import org.xmind.ui.richtext.LineStyle;
 import org.xmind.ui.richtext.RichTextEditViewer;
 import org.xmind.ui.richtext.RichTextUtils;
 import org.xmind.ui.richtext.TextActionConstants;
+import org.xmind.ui.tabfolder.DelegatedSelectionProvider;
 import org.xmind.ui.texteditor.IMenuContributor;
 import org.xmind.ui.texteditor.ISpellingActivation;
 import org.xmind.ui.util.Logger;
@@ -208,8 +208,9 @@ public class NotesPart extends ViewModelPart
                     || viewer.getControl().isDisposed() || adapter == null)
                 return;
 
-            MindMapUIPlugin.getDefault().getUsageDataCollector()
-                    .increase(UserDataConstants.NOTES_INSERT_IMAGE_COUNT);
+            MindMapUIPlugin.getDefault().getUsageDataCollector().trackEvent(
+                    UserDataConstants.CATEGORY_NOTES,
+                    UserDataConstants.NOTES_INSERT_IMAGE);
 
             String path = getPath();
             if (path == null)
@@ -253,8 +254,9 @@ public class NotesPart extends ViewModelPart
         }
 
         public void run() {
-            MindMapUIPlugin.getDefault().getUsageDataCollector()
-                    .increase(UserDataConstants.NOTES_INSERT_HYPERLINK_COUNT);
+            MindMapUIPlugin.getDefault().getUsageDataCollector().trackEvent(
+                    UserDataConstants.CATEGORY_NOTES,
+                    UserDataConstants.NOTES_INSERT_HYPERLINK);
 
             IRichTextRenderer renderer = viewer.getRenderer();
             ITextSelection selection = (ITextSelection) viewer.getSelection();
@@ -413,10 +415,9 @@ public class NotesPart extends ViewModelPart
         @Override
         protected void handleFontSelectionChanged(SelectionChangedEvent event) {
             super.handleFontSelectionChanged(event);
-            MindMapUIPlugin.getDefault().getUsageDataCollector()
-                    .increase(UserDataConstants.NOTES_FONT_CHANGE_COUNT);
-            MindMapUIPlugin.getDefault().getUsageDataCollector()
-                    .increase(UserDataConstants.FONT_CHANGE_ALL_COUNT);
+            MindMapUIPlugin.getDefault().getUsageDataCollector().trackEvent(
+                    UserDataConstants.CATEGORY_NOTES,
+                    UserDataConstants.NOTES_CHANGE_FONT);
         }
     }
 
@@ -502,8 +503,8 @@ public class NotesPart extends ViewModelPart
         topicViewerContributor = new NotesPartRichTextActionBarContributor();
         workbenchWindow.getActivePage().addPartListener(this);
         showBootstrapContent();
-        MindMapUIPlugin.getDefault().getUsageDataCollector()
-                .increase(UserDataConstants.USE_NOTES_COUNT);
+        MindMapUIPlugin.getDefault().getUsageDataCollector().trackEvent(
+                UserDataConstants.CATEGORY_NOTES, UserDataConstants.USE_NOTES);
         return contentArea;
     }
 
@@ -648,10 +649,10 @@ public class NotesPart extends ViewModelPart
         }
 
         if (contributingEditor != null) {
-            ISelectionProvider selectionProvider = contributingEditor.getSite()
-                    .getSelectionProvider();
+            DelegatedSelectionProvider selectionProvider = (DelegatedSelectionProvider) contributingEditor
+                    .getSite().getSelectionProvider();
             if (selectionProvider != null)
-                selectionProvider.removeSelectionChangedListener(
+                selectionProvider.removeAsyncSelectionChangedListener(
                         getSelectionChangedListener());
         }
 
@@ -660,10 +661,10 @@ public class NotesPart extends ViewModelPart
         ISelection newSelection = null;
 
         if (contributingEditor != null) {
-            ISelectionProvider selectionProvider = contributingEditor.getSite()
-                    .getSelectionProvider();
+            DelegatedSelectionProvider selectionProvider = (DelegatedSelectionProvider) contributingEditor
+                    .getSite().getSelectionProvider();
             if (selectionProvider != null) {
-                selectionProvider.addSelectionChangedListener(
+                selectionProvider.addAsyncSelectionChangedListener(
                         getSelectionChangedListener());
                 newSelection = selectionProvider.getSelection();
             }

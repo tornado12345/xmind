@@ -20,6 +20,7 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.xmind.core.internal.UserDataConstants;
 import org.xmind.ui.commands.MindMapCommandConstants;
 import org.xmind.ui.internal.MindMapMessages;
 import org.xmind.ui.internal.MindMapUIPlugin;
@@ -32,7 +33,6 @@ public class OpenWorkbooksHandler {
 
     private static final List<String> NO_URIS = Collections.emptyList();
     private static final String LOCAL_FILE_SCHEME = "file"; //$NON-NLS-1$
-    private static final String SEAWIND_FILE_SCHEME = "seawind"; //$NON-NLS-1$
 
     @Inject
     public void execute(final IWorkbenchWindow window,
@@ -60,6 +60,9 @@ public class OpenWorkbooksHandler {
             uris = new ArrayList<String>(files.size());
             for (File file : files) {
                 uris.add(file.toURI().toString());
+                MindMapUIPlugin.getDefault().getUsageDataCollector().trackEvent(
+                        UserDataConstants.CATEGORY_WORKBOOK,
+                        UserDataConstants.OPEN_FILE);
             }
         }
 
@@ -117,10 +120,5 @@ public class OpenWorkbooksHandler {
             MessageDialog.openWarning(null,
                     MindMapMessages.FileNotExistDialog_Title,
                     MindMapMessages.FileNotExistDialog_Message);
-        else if (SEAWIND_FILE_SCHEME.equalsIgnoreCase(scheme)) {
-            MessageDialog.openWarning(null,
-                    MindMapMessages.CloudFileNotExistDialog_Title,
-                    MindMapMessages.CloudFileNotExistDialog_Message);
-        }
     }
 }

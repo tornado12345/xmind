@@ -6,7 +6,7 @@
  * which is available at http://www.eclipse.org/legal/epl-v10.html
  * and the GNU Lesser General Public License (LGPL), 
  * which is available at http://www.gnu.org/licenses/lgpl.html
- * See http://www.xmind.net/license.html for details.
+ * See https://www.xmind.net/license.html for details.
  * 
  * Contributors:
  *     XMind Ltd. - initial API and implementation
@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.FileLocator;
@@ -94,6 +93,7 @@ import org.xmind.ui.mindmap.MindMapUI;
 import org.xmind.ui.prefs.PrefConstants;
 import org.xmind.ui.util.Logger;
 import org.xmind.ui.util.ResourceFinder;
+import org.xmind.ui.util.XMLUtils;
 
 public class MindMapResourceManager implements IResourceManager {
 
@@ -1210,8 +1210,8 @@ public class MindMapResourceManager implements IResourceManager {
             InputStream is = xmlURL.openStream();
             if (is != null) {
                 try {
-                    Document doc = DocumentBuilderFactory.newInstance()
-                            .newDocumentBuilder().parse(is);
+                    Document doc = XMLUtils.getDefaultDocumentBuilder()
+                            .parse(is);
                     if (doc != null)
                         return doc.getDocumentElement();
                 } finally {
